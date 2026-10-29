@@ -1,0 +1,25 @@
+[project]
+name = "call-me-maybe"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "llm-sdk",
+    "numpy>=2.2.6",
+    "pydantic>=2.14.2",
+]
+
+[tool.uv.sources]
+llm-sdk = { path = "llm_sdk", editable = true }
+
+[tool.mypy]
+exclude = ["^llm_sdk/", "^\\.venv/"]
+
+[[tool.mypy.overrides]]
+module = ["llm_sdk", "llm_sdk.*"]
+follow_imports = "skip"
+
+[dependency-groups]
+dev = [
+    "flake8>=7.4.1",
+    "mypy>=2.4.1",
+]
