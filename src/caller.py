@@ -12,6 +12,7 @@ STRING_MAX_LENGTH = 200
 OUTPUT_START = '{"name":"'
 NAME_SUFFIX = '","parameters":{'
 OUTPUT_END = "}}"
+NO_MATCH = "None"
 
 
 def key_text(name: str, param_type: ParamType) -> str:
@@ -71,6 +72,8 @@ class FunctionCaller(BaseModel):
         Returns:
             The validated function call.
         """
+        if not request.strip():
+            raise ValueError("The prompt is empty")
         ids = self.decoder.encode(build_prompt(self.functions, request))
         ids.extend(self.decoder.encode(OUTPUT_START))
         output = OUTPUT_START
@@ -79,10 +82,12 @@ class FunctionCaller(BaseModel):
             ids, ValueConstraint(
                 kind="enum",
                 suffix=NAME_SUFFIX,
-                options=[function.name for function in self.functions]
+                options=[f.name for f in self.functions] + [NO_MATCH]
                 )
             )
         output += written
+        if name == NO_MATCH:
+            raise ValueError("No function matches this request")
         function = next(f for f in self.functions if f.name == name)
         params = list(function.parameters.items())
 
@@ -96,7 +101,7 @@ class FunctionCaller(BaseModel):
         for index, (_, spec) in enumerate(params):
             if index + 1 < len(params):
                 next_name, next_spec = params[index + 1]
-                suffix = ", " + key_text(next_name, next_spec.type)
+                suffix = "," + key_text(next_name, next_spec.type)
             else:
                 suffix = OUTPUT_END
             _, written = self.decoder.generate_value(
@@ -104,6 +109,12 @@ class FunctionCaller(BaseModel):
             output += written
 
         parsed = json.loads(output)
+        arguments = parsed["parameters"]
+        # The subject has a contradiction about necessity of number
+        # transformation into floats. The following code would add it:
+        # for param_name, spec in params:
+        #     if spec.type == "number":
+        #         arguments[param_name] = float(arguments[param_name])
         return FunctionCallResult(
-            prompt=request, name=name, parameters=parsed["parameters"]
+            prompt=request, name=name, parameters=arguments
             )

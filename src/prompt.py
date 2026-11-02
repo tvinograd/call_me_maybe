@@ -4,7 +4,8 @@ from .models import FunctionDefinition
 SYSTEM_TEXT = (
     "You turn a user request into one function call in JSON.\n"
     "Pick the function whose description matches the request "
-    "and fill in its arguments.\n"
+    "and fill in its arguments. If no function can do what the "
+    "request asks, use the name None.\n"
     "Available functions:\n"
 )
 EXAMPLE_TEXT = (
