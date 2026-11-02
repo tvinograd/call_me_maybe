@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 ValueKind = Literal["number", "integer", "string", "boolean", "enum"]
 
-NUMBER_RE = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?")
+NUMBER_RE = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?")
 INTEGER_RE = re.compile(r"-?(0|[1-9][0-9]*)")
 ESCAPABLE = set('"\\/bfnrt')
 
@@ -14,7 +14,11 @@ ESCAPABLE = set('"\\/bfnrt')
 def scan_string(text: str) -> tuple[bool, bool]:
     """Check JSON string content.
 
-    Returns (valid, ends_inside_escape).
+    Args:
+        text: String content without quotes.
+
+    Returns:
+        (valid, ends_inside_escape).
     """
     escaped = False
     for char in text:
@@ -30,7 +34,15 @@ def scan_string(text: str) -> tuple[bool, bool]:
 
 
 def find_end(text: str, end_char: str) -> int:
-    """Return the index of the first unescaped end_char, or -1."""
+    """Find where a value ends.
+
+    Args:
+        text: Generated text.
+        end_char: First character of the suffix.
+
+    Returns:
+        Index of the first unescaped end_char, or -1.
+    """
     escaped = False
     for index, char in enumerate(text):
         if escaped:
@@ -43,7 +55,14 @@ def find_end(text: str, end_char: str) -> int:
 
 
 class ValueConstraint(BaseModel):
-    """Constraint for one JSON value followed by a fixed suffix."""
+    """Constraint for one JSON value followed by a fixed suffix.
+
+    Attributes:
+        kind: Which rules apply.
+        suffix: Fixed text after the value.
+        options: Allowed values for "enum" and "boolean".
+        max_length: Maximum value length.
+    """
 
     kind: ValueKind
     suffix: str
@@ -51,7 +70,14 @@ class ValueConstraint(BaseModel):
     max_length: int = 64
 
     def is_complete(self, value: str) -> bool:
-        """Return True if value is a finished, valid value."""
+        """Check whether the value may stop here.
+
+        Args:
+            value: Value text without suffix.
+
+        Returns:
+            True if the value is finished and valid.
+        """
         if self.kind == "number":
             return NUMBER_RE.fullmatch(value) is not None
         if self.kind == "integer":
@@ -62,7 +88,14 @@ class ValueConstraint(BaseModel):
         return value in self.options
 
     def is_valid_prefix(self, value: str) -> bool:
-        """Return True if value can still be extended to a complete value."""
+        """Check whether the value can still be completed.
+
+        Args:
+            value: Value text so far.
+
+        Returns:
+            True if some continuation makes it complete.
+        """
         if self.kind in ("number", "integer"):
             return len(value) < self.max_length and (
                 self.is_complete(value) or self.is_complete(value + "0"))
@@ -74,7 +107,15 @@ class ValueConstraint(BaseModel):
         return any(option.startswith(value) for option in self.options)
 
     def accepts(self, generated: str, token: str) -> bool:
-        """Return True if token may be appended to the generated value."""
+        """Check whether a token may be appended.
+
+        Args:
+            generated: Value text so far.
+            token: Candidate token text.
+
+        Returns:
+            True if the token keeps the value valid.
+        """
         text = generated + token
         end = find_end(text, self.suffix[0])
         if end == -1:
