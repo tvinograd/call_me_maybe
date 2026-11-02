@@ -1,5 +1,6 @@
 """Entry point: python -m src."""
 import argparse
+import json
 import sys
 import time
 from pathlib import Path
@@ -69,11 +70,13 @@ def run(args: argparse.Namespace) -> None:
         try:
             result = caller.call(item.prompt)
         except Exception as error:
-            print(f"[{number}/{len(prompts)}] skipped {item.prompt!r}: "
+            print(f"[{number}/{len(prompts)}] SKIP {item.prompt!r}: "
                   f"{error}", file=sys.stderr)
             continue
         results.append(result)
-        print(f"[{number}/{len(prompts)}] {item.prompt!r} -> {result.name}")
+        arguments = json.dumps(result.parameters, ensure_ascii=False)
+        print(f"[{number}/{len(prompts)}] {item.prompt!r} -> "
+              f"{result.name}{arguments}")
 
     save_results(args.output, results)
     print(f"Wrote {len(results)} results to {args.output} "
