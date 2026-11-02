@@ -6,6 +6,7 @@ from typing import Any
 from pydantic import TypeAdapter, ValidationError
 
 from .models import FunctionCallResult, FunctionDefinition, PromptItem
+from .caller import NO_MATCH
 
 
 def describe(error: ValidationError) -> str:
@@ -74,6 +75,8 @@ def load_functions(path: Path) -> list[FunctionDefinition]:
     if not functions:
         raise ValueError(f"{path} contains no functions")
     names = [function.name for function in functions]
+    if NO_MATCH in names:
+        raise ValueError(f"{path}: '{NO_MATCH}' is a reserved name")
     duplicates = sorted({name for name in names if names.count(name) > 1})
     if duplicates:
         raise ValueError(
