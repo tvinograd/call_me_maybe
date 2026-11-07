@@ -44,11 +44,11 @@ def value_constraint(param_type: ParamType, suffix: str) -> ValueConstraint:
     if param_type == "string":
         return ValueConstraint(
             kind="string", suffix='"' + suffix, max_length=STRING_MAX_LENGTH
-            )
+        )
     if param_type == "boolean":
         return ValueConstraint(
             kind="boolean", suffix=suffix, options=["true", "false"]
-            )
+        )
     return ValueConstraint(kind=param_type, suffix=suffix)
 
 
@@ -83,8 +83,8 @@ class FunctionCaller(BaseModel):
                 kind="enum",
                 suffix=NAME_SUFFIX,
                 options=[f.name for f in self.functions] + [NO_MATCH]
-                )
             )
+        )
         output += written
         if name == NO_MATCH:
             raise ValueError("No function matches this request")
@@ -117,4 +117,4 @@ class FunctionCaller(BaseModel):
         #         arguments[param_name] = float(arguments[param_name])
         return FunctionCallResult(
             prompt=request, name=name, parameters=arguments
-            )
+        )
