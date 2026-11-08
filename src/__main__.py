@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
         The parsed options.
     """
     parser = argparse.ArgumentParser(
-        prog="python -m src",
+        prog="uv run python -m src",
         description="Translate natural-language prompts into function "
                     "calls with constrained decoding.")
     parser.add_argument(
