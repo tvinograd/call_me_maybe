@@ -33,13 +33,12 @@ Defaults: `data/input/functions_definition.json`,
 
 Other rules: `make run`, `make debug` (pdb), `make clean`, `make lint`.
 
-In case of limited storage:
-
-```sh
-export UV_CACHE_DIR=/goinfre/$USER/uv-cache
-export UV_PROJECT_ENVIRONMENT=/goinfre/$USER/venvs/call_me_maybe
-export HF_HOME=/goinfre/$USER/hf
-```
+On 42 machines the home quota is too small for PyTorch, so `make install`
+and `make run` automatically keep the virtual environment and the caches
+(including the model) in `/goinfre/$USER`. There is nothing to configure.
+If `/goinfre` is not available, uv uses its default locations. Running
+`uv sync` or `uv run` directly also works, but then everything goes to
+`./.venv` and `~/.cache`.
 
 ## Example usage
 
